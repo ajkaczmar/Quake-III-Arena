@@ -298,7 +298,7 @@ typedef struct {
 	qboolean		isVideoMap;
 } textureBundle_t;
 
-#define NUM_TEXTURE_BUNDLES 2
+#define NUM_TEXTURE_BUNDLES 4
 
 typedef struct {
 	qboolean		active;
@@ -318,6 +318,13 @@ typedef struct {
 	acff_t			adjustColorsForFog;
 
 	qboolean		isDetail;
+
+		//GPU shader handles
+	GLuint gpuVertexShader, gpuFragmentShader, gpuProgram;
+	
+	//GPU shader params
+	GLuint Eye_param;
+	GLuint Tangent, Normal, Bitangent;
 } shaderStage_t;
 
 struct shaderCommands_s;
@@ -957,6 +964,29 @@ typedef struct {
 	float					sawToothTable[FUNCTABLE_SIZE];
 	float					inverseSawToothTable[FUNCTABLE_SIZE];
 	float					fogTable[FOG_TABLE_SIZE];
+
+	//
+	//GLSL Shaders
+	//
+	GLuint glslParallaxMappingProgram;
+	GLuint glslHBlurProgram;
+	GLuint glslVBlurProgram;
+
+	//	GPU shader params	
+	//		Parallax Mapping shader params
+	GLint Eye_param, Tangent_param, Normal_param, Bitangent_param;	
+	//		Gaussian Blur shader params
+	GLint blurSizeV_param, blurSizeH_param;
+
+
+	//framebuffer object
+	GLuint fb;  // color render target
+	GLuint depth_rb; // depth render target
+	qboolean fboSupported;
+	GLuint framebufferTexture;
+
+	GLuint dof12BluredTexture, dof12HBluredTexture;
+	GLuint dof14BluredTexture, dof14HBluredTexture;
 } trGlobals_t;
 
 extern backEndState_t	backEnd;
@@ -1186,6 +1216,10 @@ image_t		*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicm
 
 image_t		*R_CreateImage( const char *name, const byte *pic, int width, int height, qboolean mipmap
 					, qboolean allowPicmip, int wrapClampMode );
+
+image_t *R_CreateImageDescriptor( const char *name, int width, int height, 
+					   qboolean mipmap, qboolean allowPicmip, int glWrapClampMode );
+
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 
 void		R_SetColorMappings( void );
@@ -1268,6 +1302,8 @@ typedef struct shaderCommands_s
 	glIndex_t	indexes[SHADER_MAX_INDEXES];
 	vec4_t		xyz[SHADER_MAX_VERTEXES];
 	vec4_t		normal[SHADER_MAX_VERTEXES];
+	vec4_t		tangent[SHADER_MAX_VERTEXES];	//AKa
+	vec4_t		bitangent[SHADER_MAX_VERTEXES];	//AKa
 	vec2_t		texCoords[SHADER_MAX_VERTEXES][2];
 	color4ub_t	vertexColors[SHADER_MAX_VERTEXES];
 	int			vertexDlightBits[SHADER_MAX_VERTEXES];
@@ -1572,6 +1608,11 @@ typedef struct {
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
 	renderCommandList_t	commands;
 } backEndData_t;
+
+//ARB shader functions typedefs
+// helper typedefs for extensions
+typedef unsigned int GLhandleARB;
+typedef char GLcharARB;
 
 extern	int		max_polys;
 extern	int		max_polyverts;

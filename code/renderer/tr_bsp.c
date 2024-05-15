@@ -295,6 +295,49 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 	return shader;
 }
 
+void R_CalculateTBN(vec3_t v1, vec3_t v2, vec3_t v3, float *st1, float *st2, float *st3, vec3_t normal, vec3_t tangent, vec3_t bitangent)
+{
+	float fDenominator;
+	float c2c1_T, c2c1_B;
+	float c3c1_T, c3c1_B;
+	float v2v1[3], v3v1[3];
+
+	VectorSubtract(v2,v1,v2v1);
+	VectorSubtract(v3,v1,v3v1);
+
+    
+	// c2c1_T = V2.texcoord.x ñ V1.texcoord.x
+	// c2c1_B = V2.texcoord.y ñ V1.texcoord.y
+	// c3c1_T = V3.texcoord.x ñ V1.texcoord.x
+	// c3c1_B = V3.texcoord.y ñ V1.texcoord.y
+
+	// Calculate c2c1_T and c2c1_B
+	c2c1_T = st2[0] - st1[0];
+	c2c1_B = st2[1] - st1[1];
+
+	// Calculate c3c1_T and c3c1_B
+	c3c1_T = st3[0] - st1[0];
+	c3c1_B = st3[1] - st1[1];
+
+	fDenominator = c2c1_T * c3c1_B - c3c1_T * c2c1_B;
+	if( fDenominator == 0.0f)
+	{
+
+	}
+	else
+	{
+		// Calculate the reciprocal value once and for all (to achieve speed)
+		float fScale1 = 1.0f / fDenominator;
+
+		// T and B are calculated just as the equation in the article states		
+		tangent[0] = (c3c1_B * v2v1[0] - c2c1_B * v3v1[0]) * fScale1;
+		tangent[1] = (c3c1_B * v2v1[1] - c2c1_B * v3v1[1]) * fScale1;
+		tangent[2] = (c3c1_B * v2v1[2] - c2c1_B * v3v1[2]) * fScale1;
+
+		CrossProduct(normal, tangent, bitangent);
+	}				
+}
+
 /*
 ===============
 ParseFace
@@ -362,6 +405,10 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int 
 	cv->plane.dist = DotProduct( cv->points[0], cv->plane.normal );
 	SetPlaneSignbits( &cv->plane );
 	cv->plane.type = PlaneTypeForNormal( cv->plane.normal );
+
+	R_CalculateTBN(verts[0].xyz, verts[1].xyz, verts[2].xyz,  verts[0].st,  verts[1].st,  verts[2].st, cv->plane.normal, cv->plane.tangent, cv->plane.bitangent);
+	VectorNormalize(cv->plane.tangent);
+	VectorNormalize(cv->plane.bitangent);
 
 	surf->data = (surfaceType_t *)cv;
 }

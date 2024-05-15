@@ -155,6 +155,25 @@ void ( APIENTRY * qglClientActiveTextureARB )( GLenum texture );
 void ( APIENTRY * qglLockArraysEXT)( GLint, GLint);
 void ( APIENTRY * qglUnlockArraysEXT) ( void );
 
+//GLSL ARB support
+PFNGLCREATESHADEROBJECTARBPROC qglCreateShaderObjectARB;
+PFNGLSHADERSOURCEARBPROC qglShaderSourceARB;
+PFNGLCOMPILESHADERARBPROC qglCompileShaderARB;
+PFNGLCREATEPROGRAMOBJECTARBPROC qglCreateProgramObjectARB;
+PFNGLATTACHOBJECTARBPROC qglAttachObjectARB;
+PFNGLLINKPROGRAMARBPROC qglLinkProgramARB;
+PFNGLUSEPROGRAMOBJECTARBPROC qglUseProgramObjectARB;
+
+PFNGLGETUNIFORMLOCATIONARBPROC qglGetUniformLocationARB;
+PFNGLUNIFORM1IARBPROC qglUniform1iARB;
+PFNGLUNIFORM1FARBPROC qglUniform1fARB;
+PFNGLUNIFORM4FARBPROC qglUniform4fARB;
+PFNGLGETATTRIBLOCATIONARBPROC qglGetAttribLocationARB;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC qglEnableVertexAttribArrayARB;
+PFNGLDISABLEVERTEXATTRIBARRAYARBPROC qglDisableVertexAttribArrayARB;
+PFNGLVERTEXATTRIBPOINTERARBPROC qglVertexAttribPointerARB;
+PFNGLGETOBJECTPARAMETERIVARBPROC qglGetObjectParameterivARB;
+
 static void AssertCvarRange( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral )
 {
 	if ( shouldBeIntegral )
@@ -300,7 +319,8 @@ vidmode_t r_vidModes[] =
     { "Mode  8: 1280x1024",		1280,	1024,	1 },
     { "Mode  9: 1600x1200",		1600,	1200,	1 },
     { "Mode 10: 2048x1536",		2048,	1536,	1 },
-    { "Mode 11: 856x480 (wide)",856,	480,	1 }
+    { "Mode 11: 856x480 (wide)", 856,	480,	1 },
+	{ "Mode 12: 1680x1080 (wide)", 1680,	1080,	1 }
 };
 static int	s_numVidModes = ( sizeof( r_vidModes ) / sizeof( r_vidModes[0] ) );
 

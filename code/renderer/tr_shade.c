@@ -390,7 +390,99 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	GL_SelectTexture( 0 );
 }
 
+/*
+===================
+DrawGPUShaded
+===================
+*/
+static void DrawGPUShaded( shaderCommands_t *input, int stage ) {
+	shaderStage_t	*pStage;
 
+	//const GLfloat normal_p[4] = {tess.normal[0], tess.normal[1], tess.normal[2], 1.0f};
+	//const GLfloat tangent_p[4] = {tess.tangent[0], tess.tangent[1], tess.tangent[2], 1.0f};
+	//const GLfloat bitangent_p[4] = {tess.bitangent[0], tess.bitangent[1], tess.bitangent[2], 1.0f};
+
+	pStage = tess.xstages[stage];
+
+	// this is an ugly hack to work around a GeForce driver
+	// bug with multitexture and clip planes
+	if ( backEnd.viewParms.isPortal ) {
+		qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	}
+
+	qglUseProgramObjectARB(pStage->gpuProgram);
+	
+	qglUniform4fARB(tr.Eye_param, 0.0f, 0.0f, 0.0f, 1.0f );	
+
+	qglEnableVertexAttribArrayARB(tr.Normal_param);
+	qglVertexAttribPointerARB(tr.Normal_param,4,GL_FLOAT,0,0, input->normal);
+	
+	qglEnableVertexAttribArrayARB(tr.Tangent_param);
+	qglVertexAttribPointerARB(tr.Tangent_param,4,GL_FLOAT,0,0, input->tangent);
+	
+	qglEnableVertexAttribArrayARB(tr.Bitangent_param);
+	qglVertexAttribPointerARB(tr.Bitangent_param,4,GL_FLOAT,0,0, input->bitangent);
+
+
+	
+	/*qglLightfv(GL_LIGHT0, GL_POSITION, position);*/
+
+	//
+	// base
+	//
+	GL_SelectTexture( 0 );
+	qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[0] );
+	R_BindAnimatedImage( &pStage->bundle[0] );
+
+	if(pStage->bundle[1].image[0])	
+	{
+		//
+		// lightmap/secondary pass
+		//
+		GL_SelectTexture( 1 );
+		qglEnable( GL_TEXTURE_2D );
+		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+
+		if ( r_lightmap->integer ) {
+			GL_TexEnv( GL_REPLACE );
+		} else {
+			GL_TexEnv( tess.shader->multitextureEnv );
+		}
+
+		qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[1] );
+		R_BindAnimatedImage( &pStage->bundle[1] );
+	}
+
+	if(pStage->bundle[2].image[0])
+	{
+		GL_SelectTexture( 2 );
+		qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[0] );
+		R_BindAnimatedImage( &pStage->bundle[2] );
+	}
+
+	if(pStage->bundle[3].image[0])
+	{	
+		GL_SelectTexture( 3 );
+		qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[0] );
+		R_BindAnimatedImage( &pStage->bundle[3] );
+	}
+
+	R_DrawElements( input->numIndexes, input->indexes );
+
+	//
+	// disable texturing on TEXTURE1, then select TEXTURE0
+	//
+	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	qglDisable( GL_TEXTURE_2D );
+
+	GL_SelectTexture( 0 );
+
+	qglDisableVertexAttribArrayARB(tr.Normal_param);
+	qglDisableVertexAttribArrayARB(tr.Tangent_param);
+	qglDisableVertexAttribArrayARB(tr.Bitangent_param);
+
+	qglUseProgramObjectARB(0);
+}
 
 /*
 ===================
@@ -970,7 +1062,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		if ( pStage->bundle[1].image[0] != 0 )
 		{
-			DrawMultitextured( input, stage );
+			if(pStage->gpuProgram!=0)
+				DrawGPUShaded( input, stage );			
+			else
+				DrawMultitextured( input, stage );
 		}
 		else
 		{
@@ -1078,6 +1173,7 @@ void RB_StageIteratorGeneric( void )
 	{
 		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		qglEnableClientState( GL_COLOR_ARRAY );
+		qglEnableClientState( GL_VERTEX_ARRAY );
 	}
 
 	//

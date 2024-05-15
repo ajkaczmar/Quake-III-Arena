@@ -1830,11 +1830,22 @@ static qboolean CollapseMultitexture( void ) {
 	{
 		tmpBundle = stages[0].bundle[0];
 		stages[0].bundle[0] = stages[1].bundle[0];
-		stages[0].bundle[1] = tmpBundle;
+		stages[0].gpuProgram = stages[1].gpuProgram;
+		stages[0].gpuVertexShader = stages[1].gpuVertexShader;
+		stages[0].gpuFragmentShader = stages[1].gpuFragmentShader;
+		stages[0].bundle[1] = tmpBundle;		
+		stages[0].bundle[2] = stages[1].bundle[2];
+		stages[0].bundle[3] = stages[1].bundle[3];
 	}
 	else
 	{
 		stages[0].bundle[1] = stages[1].bundle[0];
+		stages[0].bundle[2] = stages[1].bundle[2];
+		stages[0].bundle[3] = stages[1].bundle[3];
+
+		stages[0].gpuProgram = stages[1].gpuProgram;
+		stages[0].gpuVertexShader = stages[1].gpuVertexShader;		
+		stages[0].gpuFragmentShader = stages[1].gpuFragmentShader;
 	}
 
 	// set the new blend state bits
@@ -2407,6 +2418,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	int			i, hash;
 	char		*shaderText;
 	image_t		*image;
+	image_t		*image_norm;
+	image_t		*image_gloss;
 	shader_t	*sh;
 
 	if ( name[0] == 0 ) {
@@ -2492,18 +2505,52 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		return FinishShader();
 	}
 
+
+	// if not defined in the in-memory shader descriptions,
+	// look for a single TGA, BMP, or PCX
+	//
+	Q_strncpyz( fileName, name, sizeof( fileName ) );	
+	COM_DefaultExtension( fileName, sizeof( fileName ), ".tga" );
+	image = R_FindImageFile( fileName, mipRawImage, mipRawImage, mipRawImage ? GL_REPEAT : GL_CLAMP );
+	if ( !image ) {
+		ri.Printf( PRINT_DEVELOPER, "Couldn't find image for shader %s\n", name );
+		shader.defaultShader = qtrue;
+		return FinishShader();
+	}
+
+	//	
+	// look for a single TGA, BMP, or PCX normal map
+	//
+	Q_strncpyz( fileName, name, sizeof( fileName ) );
+	COM_StripExtension( fileName, fileName );
+	COM_DefaultExtension( fileName, sizeof( fileName ), "_norm.bmp" );
+	image_norm = R_FindImageFile( fileName, mipRawImage, mipRawImage, mipRawImage ? GL_REPEAT : GL_CLAMP );
+
+	
+	Q_strncpyz( fileName, name, sizeof( fileName ) );
+	COM_StripExtension( fileName, fileName );
+	COM_DefaultExtension( fileName, sizeof( fileName ), "_gloss.bmp" );
+	image_gloss = R_FindImageFile( fileName, mipRawImage, mipRawImage, mipRawImage ? GL_REPEAT : GL_CLAMP );
+
+
 	//
 	// create the default shading commands
 	//
 	if ( shader.lightmapIndex == LIGHTMAP_NONE ) {
 		// dynamic colors at vertexes
 		stages[0].bundle[0].image[0] = image;
+				stages[0].bundle[2].image[0] = image_norm;
+		stages[0].bundle[3].image[0] = image_gloss;
+		if(image_norm || image_gloss) stages[0].gpuProgram = tr.glslParallaxMappingProgram;
 		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
 		stages[0].stateBits = GLS_DEFAULT;
 	} else if ( shader.lightmapIndex == LIGHTMAP_BY_VERTEX ) {
 		// explicit colors at vertexes
 		stages[0].bundle[0].image[0] = image;
+		stages[0].bundle[2].image[0] = image_norm;
+		stages[0].bundle[3].image[0] = image_gloss;
+		if(image_norm || image_gloss) stages[0].gpuProgram = tr.glslParallaxMappingProgram;
 		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_EXACT_VERTEX;
 		stages[0].alphaGen = AGEN_SKIP;
@@ -2511,6 +2558,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	} else if ( shader.lightmapIndex == LIGHTMAP_2D ) {
 		// GUI elements
 		stages[0].bundle[0].image[0] = image;
+				stages[0].bundle[2].image[0] = image_norm;
+		stages[0].bundle[3].image[0] = image_gloss;
+		if(image_norm || image_gloss) stages[0].gpuProgram = tr.glslParallaxMappingProgram;
 		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_VERTEX;
 		stages[0].alphaGen = AGEN_VERTEX;
@@ -2525,6 +2575,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[0].stateBits = GLS_DEFAULT;
 
 		stages[1].bundle[0].image[0] = image;
+		stages[1].bundle[2].image[0] = image_norm;
+		stages[1].bundle[3].image[0] = image_gloss;
+		if(image_norm || image_gloss) stages[1].gpuProgram = tr.glslParallaxMappingProgram;
 		stages[1].active = qtrue;
 		stages[1].rgbGen = CGEN_IDENTITY;
 		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
@@ -2538,6 +2591,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[0].stateBits = GLS_DEFAULT;
 
 		stages[1].bundle[0].image[0] = image;
+		stages[1].bundle[2].image[0] = image_norm;
+		stages[1].bundle[3].image[0] = image_gloss;
+		if(image_norm || image_gloss) stages[1].gpuProgram = tr.glslParallaxMappingProgram;
 		stages[1].active = qtrue;
 		stages[1].rgbGen = CGEN_IDENTITY;
 		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
@@ -2993,6 +3049,114 @@ static void CreateExternalShaders( void ) {
 	tr.sunShader = R_FindShader( "sun", LIGHTMAP_NONE, qtrue );
 }
 
+GLuint ComplieGLSLShader(const char *vertexShaderFile, const char *fragmentShaderFile)
+{
+	int nResult;	
+	char *buffer;
+	char filename[MAX_QPATH];
+	GLuint program, glslFragment, glslVertex;
+
+	Com_sprintf( filename, sizeof( filename ), "shaders/%s", vertexShaderFile );	
+	ri.FS_ReadFile( filename, (void **)&buffer );
+
+	glslVertex = qglCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+	qglShaderSourceARB(glslVertex, 1, &buffer, NULL);
+	qglCompileShaderARB(glslVertex);
+	ri.FS_FreeFile( buffer );
+
+	qglGetObjectParameterivARB( glslVertex, GL_OBJECT_COMPILE_STATUS_ARB, &nResult );
+		
+	Com_sprintf( filename, sizeof( filename ), "shaders/%s", fragmentShaderFile );	
+	ri.FS_ReadFile( filename, (void **)&buffer );
+
+	glslFragment = qglCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+	qglShaderSourceARB(glslFragment, 1, &buffer, NULL);
+	qglCompileShaderARB(glslFragment);
+	ri.FS_FreeFile( buffer );
+
+	qglGetObjectParameterivARB( glslFragment, GL_OBJECT_COMPILE_STATUS_ARB, &nResult );
+
+	program = qglCreateProgramObjectARB();
+
+	qglAttachObjectARB(program, glslVertex);
+	qglGetObjectParameterivARB( glslFragment, GL_OBJECT_COMPILE_STATUS_ARB, &nResult );
+
+	qglAttachObjectARB(program, glslFragment);
+	qglGetObjectParameterivARB( glslFragment, GL_OBJECT_COMPILE_STATUS_ARB, &nResult );
+    
+	qglLinkProgramARB(program);
+	qglGetObjectParameterivARB( glslFragment, GL_OBJECT_LINK_STATUS_ARB, &nResult );
+
+	return program;
+}
+
+
+static void GLSLShaderInit( void )
+{		
+
+	//char *ext;
+	
+	GLint tex0, tex1, tex2, tex3;
+	GLint RTBlurH_param, RTScene_param;
+	const char *parallaxMappingVertexShaderFile = "parallax_v.glsl";
+	const char *parallaxMappingFragmentShaderFile = "parallax_f.glsl";
+
+	const char *horBlurVertexShaderFile = "hblur_v.glsl";
+	const char *horBlurFragmentShaderFile = "hblur_f.glsl";
+
+	const char *vertBlurVertexShaderFile = "vblur_v.glsl";
+	const char *vertBlurFragmentShaderFile = "vblur_f.glsl";	
+
+	//ext = (char*)qglGetString( GL_EXTENSIONS );
+
+	//PARALLAX MAPPING SHADER
+
+	tr.glslParallaxMappingProgram = ComplieGLSLShader(parallaxMappingVertexShaderFile, parallaxMappingFragmentShaderFile);
+	
+	//get parameters location
+	tr.Eye_param = qglGetUniformLocationARB(tr.glslParallaxMappingProgram, "Eye");
+	tex0 = qglGetUniformLocationARB(tr.glslParallaxMappingProgram, "Tex0");	
+	tex1 = qglGetUniformLocationARB(tr.glslParallaxMappingProgram, "Tex1");
+	tex2 = qglGetUniformLocationARB(tr.glslParallaxMappingProgram, "Tex2");
+	tex3 = qglGetUniformLocationARB(tr.glslParallaxMappingProgram, "Tex3");
+
+	tr.Tangent_param = qglGetAttribLocationARB(tr.glslParallaxMappingProgram, "Tangent");
+	tr.Normal_param = qglGetAttribLocationARB(tr.glslParallaxMappingProgram, "Normal");
+	tr.Bitangent_param = qglGetAttribLocationARB(tr.glslParallaxMappingProgram, "BiNormal");
+	
+	qglUseProgramObjectARB(tr.glslParallaxMappingProgram);
+	qglUniform1iARB(tex0, 0);
+	qglUniform1iARB(tex1, 1);
+	qglUniform1iARB(tex2, 2);
+	qglUniform1iARB(tex3, 3);
+	qglUseProgramObjectARB(0);
+	
+	//HORIZONTAL BLUR SHADER
+
+	tr.glslHBlurProgram = ComplieGLSLShader(horBlurVertexShaderFile, horBlurFragmentShaderFile);
+	RTScene_param = qglGetUniformLocationARB(tr.glslHBlurProgram, "RTScene");
+	tr.blurSizeH_param = qglGetUniformLocationARB(tr.glslHBlurProgram, "blurSizeH");
+
+	qglUseProgramObjectARB(tr.glslHBlurProgram);
+	qglUniform1iARB(RTScene_param, 0);
+	//qglUniform1fARB(tr.blurSizeH_param, 1.0/((float)glConfig.vidWidth) );
+	qglUniform1fARB(tr.blurSizeH_param, 1.0);
+	qglUseProgramObjectARB(0);
+
+	//VERTICAL BLUR SHADER
+
+	tr.glslVBlurProgram = ComplieGLSLShader(vertBlurVertexShaderFile, vertBlurFragmentShaderFile);
+	RTBlurH_param = qglGetUniformLocationARB(tr.glslVBlurProgram, "RTBlurH");
+	tr.blurSizeV_param = qglGetUniformLocationARB(tr.glslVBlurProgram, "blurSizeV");
+
+	qglUseProgramObjectARB(tr.glslVBlurProgram);
+	qglUniform1iARB(RTBlurH_param, 0);
+	//qglUniform1fARB(tr.blurSizeV_param, 1.0/((float)glConfig.vidHeight) );	
+	qglUniform1fARB(tr.blurSizeV_param, 1.0);
+	qglUseProgramObjectARB(0);
+}
+
+
 /*
 ==================
 R_InitShaders
@@ -3010,4 +3174,6 @@ void R_InitShaders( void ) {
 	ScanAndLoadShaderFiles();
 
 	CreateExternalShaders();
+	
+	GLSLShaderInit();
 }

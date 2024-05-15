@@ -819,6 +819,7 @@ void RB_SurfaceFace( srfSurfaceFace_t *surf ) {
 	unsigned	*indices, *tessIndexes;
 	float		*v;
 	float		*normal;
+	float		*tangent, *bitangent;
 	int			ndx;
 	int			Bob;
 	int			numPoints;
@@ -847,8 +848,15 @@ void RB_SurfaceFace( srfSurfaceFace_t *surf ) {
 
 	if ( tess.shader->needsNormal ) {
 		normal = surf->plane.normal;
+		tangent = surf->plane.tangent;
+		bitangent = surf->plane.bitangent;
 		for ( i = 0, ndx = tess.numVertexes; i < numPoints; i++, ndx++ ) {
 			VectorCopy( normal, tess.normal[ndx] );
+			VectorCopy( tangent, tess.tangent[ndx] );
+			VectorCopy( bitangent, tess.bitangent[ndx] );
+			//tess.normal[ndx][3] = 1.0f;
+			//tess.tangent[ndx][3] = 1.0f;
+			//tess.bitangent[ndx][3] = 1.0f;
 		}
 	}
 

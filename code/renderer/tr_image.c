@@ -716,30 +716,11 @@ done:
 		ri.Hunk_FreeTempMemory( resampledBuffer );
 }
 
-
-/*
-================
-R_CreateImage
-
-This is the only way any image_t are created
-================
-*/
-image_t *R_CreateImage( const char *name, const byte *pic, int width, int height, 
-					   qboolean mipmap, qboolean allowPicmip, int glWrapClampMode ) {
-	image_t		*image;
-	qboolean	isLightmap = qfalse;
-	long		hash;
-
-	if (strlen(name) >= MAX_QPATH ) {
-		ri.Error (ERR_DROP, "R_CreateImage: \"%s\" is too long\n", name);
-	}
-	if ( !strncmp( name, "*lightmap", 9 ) ) {
-		isLightmap = qtrue;
-	}
-
-	if ( tr.numImages == MAX_DRAWIMAGES ) {
-		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit\n");
-	}
+image_t *R_CreateImageDescriptor( const char *name, int width, int height, 
+					   qboolean mipmap, qboolean allowPicmip, int glWrapClampMode )
+{
+	image_t	*image;
+	long hash;
 
 	image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( image_t ), h_low );
 	image->texnum = 1024 + tr.numImages;
@@ -753,6 +734,38 @@ image_t *R_CreateImage( const char *name, const byte *pic, int width, int height
 	image->width = width;
 	image->height = height;
 	image->wrapClampMode = glWrapClampMode;
+
+	hash = generateHashValue(name);
+	image->next = hashTable[hash];
+	hashTable[hash] = image;
+
+	return image;
+}
+
+/*
+================
+R_CreateImage
+
+This is the only way any image_t are created
+================
+*/
+image_t *R_CreateImage( const char *name, const byte *pic, int width, int height, 
+					   qboolean mipmap, qboolean allowPicmip, int glWrapClampMode ) {
+	image_t		*image;
+	qboolean	isLightmap = qfalse;
+
+	if (strlen(name) >= MAX_QPATH ) {
+		ri.Error (ERR_DROP, "R_CreateImage: \"%s\" is too long\n", name);
+	}
+	if ( !strncmp( name, "*lightmap", 9 ) ) {
+		isLightmap = qtrue;
+	}
+
+	if ( tr.numImages == MAX_DRAWIMAGES ) {
+		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit\n");
+	}
+
+	image = R_CreateImageDescriptor(name, width, height, mipmap, allowPicmip, glWrapClampMode);
 
 	// lightmaps are always allocated on TMU 1
 	if ( qglActiveTextureARB && isLightmap ) {
@@ -783,10 +796,6 @@ image_t *R_CreateImage( const char *name, const byte *pic, int width, int height
 	if ( image->TMU == 1 ) {
 		GL_SelectTexture( 0 );
 	}
-
-	hash = generateHashValue(name);
-	image->next = hashTable[hash];
-	hashTable[hash] = image;
 
 	return image;
 }

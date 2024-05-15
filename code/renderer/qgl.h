@@ -90,6 +90,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GL_TEXTURE2_ARB                     0x84C2
 #define GL_TEXTURE3_ARB                     0x84C3
 
+/*
+** GLSL extension definitions
+*/
+#define GL_FRAGMENT_SHADER_ARB 0x8B30
+#define GL_VERTEX_SHADER_ARB 0x8B31
+
+#define GL_OBJECT_COMPILE_STATUS_ARB      0x8B81
+#define GL_OBJECT_LINK_STATUS_ARB         0x8B82
+
+
 // NOTE: some Linux platforms would need those prototypes
 #if defined(MACOS_X)
 typedef void (APIENTRY * PFNGLMULTITEXCOORD1DARBPROC) (GLenum target, GLdouble s);
@@ -128,6 +138,27 @@ typedef void (APIENTRY * PFNGLACTIVETEXTUREARBPROC) (GLenum target);
 typedef void (APIENTRY * PFNGLCLIENTACTIVETEXTUREARBPROC) (GLenum target);
 #endif
 
+//GLSL ARB support
+typedef unsigned int GLhandleARB;
+typedef char GLcharARB;
+typedef GLhandleARB (APIENTRY * PFNGLCREATESHADEROBJECTARBPROC) (GLenum shaderType);
+typedef void (APIENTRY *  PFNGLSHADERSOURCEARBPROC) (GLhandleARB shaderObj, GLsizei count, const GLcharARB* *string, const GLint *length);
+typedef void (APIENTRY *  PFNGLCOMPILESHADERARBPROC) (GLhandleARB shaderObj);
+typedef GLhandleARB (APIENTRY *  PFNGLCREATEPROGRAMOBJECTARBPROC) (void);
+typedef void (APIENTRY *  PFNGLATTACHOBJECTARBPROC) (GLhandleARB containerObj, GLhandleARB obj);
+typedef void (APIENTRY *  PFNGLLINKPROGRAMARBPROC) (GLhandleARB programObj);
+typedef void (APIENTRY *  PFNGLUSEPROGRAMOBJECTARBPROC) (GLhandleARB programObj);
+typedef GLint (APIENTRY * PFNGLGETUNIFORMLOCATIONARBPROC) (GLhandleARB programObj, const GLcharARB *name);
+typedef void (APIENTRY * PFNGLUNIFORM1IARBPROC) (GLint location, GLint v0);
+typedef void (APIENTRY * PFNGLUNIFORM1FARBPROC) (GLint location, GLfloat v0);
+typedef void (APIENTRY * PFNGLUNIFORM4FARBPROC) (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+typedef GLint (APIENTRY * PFNGLGETATTRIBLOCATIONARBPROC) (GLhandleARB program, const GLcharARB *name);
+typedef void (APIENTRY * PFNGLENABLEVERTEXATTRIBARRAYARBPROC)(GLuint loc);
+typedef void (APIENTRY * PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)(GLuint loc);
+typedef void (APIENTRY * PFNGLVERTEXATTRIBPOINTERARBPROC)(GLuint loc, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer); 
+typedef void (APIENTRY * PFNGLGETOBJECTPARAMETERIVARBPROC)(GLhandleARB, GLenum, GLint *);
+
+
 // TTimo - VC7 / XP ?
 #ifdef WIN32
 typedef void (APIENTRY * PFNGLMULTITEXCOORD2FARBPROC) (GLenum target, GLfloat s, GLfloat t);
@@ -153,6 +184,24 @@ extern	void ( APIENTRY * qglClientActiveTextureARB )( GLenum texture );
 
 extern	void ( APIENTRY * qglLockArraysEXT) (GLint, GLint);
 extern	void ( APIENTRY * qglUnlockArraysEXT) (void);
+
+//GLSL ARB support
+extern PFNGLCREATESHADEROBJECTARBPROC qglCreateShaderObjectARB;
+extern PFNGLSHADERSOURCEARBPROC qglShaderSourceARB;
+extern PFNGLCOMPILESHADERARBPROC qglCompileShaderARB;
+extern PFNGLCREATEPROGRAMOBJECTARBPROC qglCreateProgramObjectARB;
+extern PFNGLATTACHOBJECTARBPROC qglAttachObjectARB;
+extern PFNGLLINKPROGRAMARBPROC qglLinkProgramARB;
+extern PFNGLUSEPROGRAMOBJECTARBPROC qglUseProgramObjectARB;
+extern PFNGLGETUNIFORMLOCATIONARBPROC qglGetUniformLocationARB;
+extern PFNGLUNIFORM1IARBPROC qglUniform1iARB;
+extern PFNGLUNIFORM1FARBPROC qglUniform1fARB;
+extern PFNGLUNIFORM4FARBPROC qglUniform4fARB;
+extern PFNGLGETATTRIBLOCATIONARBPROC qglGetAttribLocationARB;
+extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC qglEnableVertexAttribArrayARB;
+extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC qglDisableVertexAttribArrayARB;
+extern PFNGLVERTEXATTRIBPOINTERARBPROC qglVertexAttribPointerARB;
+extern PFNGLGETOBJECTPARAMETERIVARBPROC qglGetObjectParameterivARB;
 
 //===========================================================================
 
@@ -505,6 +554,15 @@ extern  void ( APIENTRY * qglVertex4s )(GLshort x, GLshort y, GLshort z, GLshort
 extern  void ( APIENTRY * qglVertex4sv )(const GLshort *v);
 extern  void ( APIENTRY * qglVertexPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 extern  void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei height);
+
+extern GLenum ( APIENTRY * qglCheckFramebufferStatusEXT)(GLenum target);
+extern void ( APIENTRY * qglGenFramebuffersEXT) (GLsizei n, GLuint* framebuffers);
+extern void (APIENTRY * qglGenRenderbuffersEXT) (GLsizei n, GLuint* renderbuffers);
+extern void (APIENTRY * qglBindFramebufferEXT) (GLenum target, GLuint framebuffer);
+extern void (APIENTRY * qglFramebufferTexture2DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+extern void (APIENTRY * qglBindRenderbufferEXT) (GLenum target, GLuint renderbuffer);
+extern void (APIENTRY * qglRenderbufferStorageEXT) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+extern void (APIENTRY * qglFramebufferRenderbufferEXT) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 
 #if defined( _WIN32 )
 

@@ -1020,6 +1020,88 @@ static void GLW_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...WGL_EXT_swap_control not found\n" );
 	}
 
+	//GLSL+ functions
+	qglGenFramebuffersEXT = ( void ( APIENTRY *) (GLsizei n, GLuint* framebuffers) ) qwglGetProcAddress( "glGenFramebuffersEXT" );
+	if ( qglGenFramebuffersEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglGenFramebuffersEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglGenFramebuffersEXT not found\n" );
+	}
+
+	qglCheckFramebufferStatusEXT = ( GLenum ( APIENTRY *)(GLenum target) ) qwglGetProcAddress( "glCheckFramebufferStatusEXT" );
+	if ( qglCheckFramebufferStatusEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglCheckFramebufferStatusEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglCheckFramebufferStatusEXT not found\n" );
+	}
+
+	qglGenRenderbuffersEXT = ( void (APIENTRY *) (GLsizei n, GLuint* renderbuffers) ) qwglGetProcAddress( "glGenRenderbuffersEXT" );
+	if ( qglGenRenderbuffersEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglGenRenderbuffersEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglGenRenderbuffersEXT not found\n" );
+	}
+
+	qglBindFramebufferEXT = ( void (APIENTRY *) (GLenum target, GLuint framebuffer) ) qwglGetProcAddress( "glBindFramebufferEXT" );
+	if ( qglBindFramebufferEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglBindFramebufferEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglBindFramebufferEXT not found\n" );
+	}
+
+	qglFramebufferTexture2DEXT = ( void (APIENTRY *) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) ) qwglGetProcAddress( "glFramebufferTexture2DEXT" );
+	if ( qglFramebufferTexture2DEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglFramebufferTexture2DEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglFramebufferTexture2DEXT not found\n" );
+	}
+
+	qglBindRenderbufferEXT = ( void (APIENTRY *) (GLenum target, GLuint renderbuffer) ) qwglGetProcAddress( "glBindRenderbufferEXT" );
+	if ( qglBindRenderbufferEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglBindRenderbufferEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglBindRenderbufferEXT not found\n" );
+	}
+
+	qglRenderbufferStorageEXT = ( void (APIENTRY *) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height) ) qwglGetProcAddress( "glRenderbufferStorageEXT" );
+	if ( qglRenderbufferStorageEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglRenderbufferStorageEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglRenderbufferStorageEXT not found\n" );
+	}
+
+	qglFramebufferRenderbufferEXT = ( void (APIENTRY *) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) ) qwglGetProcAddress( "glFramebufferRenderbufferEXT" );
+	if ( qglFramebufferRenderbufferEXT )
+	{
+		ri.Printf( PRINT_ALL, "...using qglFramebufferRenderbufferEXT\n" );	
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...qglFramebufferRenderbufferEXT not found\n" );
+	}
+
+
 	// GL_ARB_multitexture
 	qglMultiTexCoord2fARB = NULL;
 	qglActiveTextureARB = NULL;
@@ -1113,6 +1195,26 @@ static void GLW_InitExtensions( void )
 	{
 		ri.Printf( PRINT_ALL, "...WGL_3DFX_gamma_control not found\n" );
 	}
+
+	//GLSL ARB support
+	qglCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)qwglGetProcAddress("glCreateShaderObjectARB");
+	qglShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)qwglGetProcAddress("glShaderSourceARB");
+	qglCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)qwglGetProcAddress("glCompileShaderARB");
+	qglCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)qwglGetProcAddress("glCreateProgramObjectARB");
+	qglAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)qwglGetProcAddress("glAttachObjectARB");
+	qglLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)qwglGetProcAddress("glLinkProgramARB");
+	qglUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)qwglGetProcAddress("glUseProgramObjectARB");
+
+	qglGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)qwglGetProcAddress("glGetUniformLocationARB");
+	qglUniform1iARB = (PFNGLUNIFORM1IARBPROC)qwglGetProcAddress("glUniform1iARB");
+	qglUniform1fARB = (PFNGLUNIFORM1FARBPROC)qwglGetProcAddress("glUniform1fARB");
+	qglUniform4fARB = (PFNGLUNIFORM4FARBPROC)qwglGetProcAddress("glUniform4fARB");
+	qglGetAttribLocationARB = (PFNGLGETATTRIBLOCATIONARBPROC)qwglGetProcAddress("glGetAttribLocationARB");
+
+	qglEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)qwglGetProcAddress("glEnableVertexAttribArrayARB");
+	qglDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)qwglGetProcAddress("glDisableVertexAttribArrayARB");
+	qglVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)qwglGetProcAddress("glVertexAttribPointerARB");
+	qglGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)qwglGetProcAddress("glGetObjectParameterivARB");
 }
 
 /*

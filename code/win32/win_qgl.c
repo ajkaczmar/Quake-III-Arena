@@ -35,6 +35,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 void QGL_EnableLogging( qboolean enable );
 
+//GLSL
+GLenum (WINAPI * qglCheckFramebufferStatusEXT) (GLenum target);
+void ( APIENTRY * qglGenFramebuffersEXT) (GLsizei n, GLuint* framebuffers);
+void (APIENTRY * qglGenRenderbuffersEXT) (GLsizei n, GLuint* renderbuffers);
+void (APIENTRY * qglBindFramebufferEXT) (GLenum target, GLuint framebuffer);
+void (APIENTRY * qglFramebufferTexture2DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+void (APIENTRY * qglBindRenderbufferEXT) (GLenum target, GLuint renderbuffer);
+void (APIENTRY * qglRenderbufferStorageEXT) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+void (APIENTRY * qglFramebufferRenderbufferEXT) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+
+
 int ( WINAPI * qwglSwapIntervalEXT)( int interval );
 BOOL  ( WINAPI * qwglGetDeviceGammaRamp3DFX)( HDC, LPVOID );
 BOOL  ( WINAPI * qwglSetDeviceGammaRamp3DFX)( HDC, LPVOID );
@@ -3637,6 +3648,25 @@ qboolean QGL_Init( const char *dllname )
 	qglUnlockArraysEXT = 0;
 	qwglGetDeviceGammaRamp3DFX = NULL;
 	qwglSetDeviceGammaRamp3DFX = NULL;
+
+	qglCreateShaderObjectARB = 0;
+	qglShaderSourceARB = 0;
+	qglCompileShaderARB = 0;
+	qglCreateProgramObjectARB = 0;
+	qglAttachObjectARB = 0;
+	qglLinkProgramARB = 0;
+	qglUseProgramObjectARB = 0;
+	qglGetObjectParameterivARB = 0;
+
+	qglGetUniformLocationARB = 0;
+	qglUniform1iARB = 0;
+	qglUniform4fARB = 0;
+	qglGetAttribLocationARB = 0;
+	qglEnableVertexAttribArrayARB = 0; //AKA
+	qglDisableVertexAttribArrayARB = 0; //AKA
+	qglVertexAttribPointerARB = 0; //AKA
+
+	qglCheckFramebufferStatusEXT = 0;
 
 	// check logging
 	QGL_EnableLogging( r_logFile->integer );
